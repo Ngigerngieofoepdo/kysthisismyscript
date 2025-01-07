@@ -91,18 +91,21 @@ local function createModelButton(model)
             -- Store the selected model name for activation
             screenGui:SetAttribute("SelectedModel", model.Name)
         end)
+
+        return button -- Return the button for further reference
     end
 end
 
 -- Populate the scrolling frame with all models containing a #
-local function updateModelButtons()
-    for _, model in ipairs(toolsFolder:GetChildren()) do
-        if model:IsA("Model") then
-            createModelButton(model)
+local modelButtons = {} -- Store model buttons for filtering
+for _, model in ipairs(toolsFolder:GetChildren()) do
+    if model:IsA("Model") then
+        local button = createModelButton(model)
+        if button then
+            table.insert(modelButtons, button)
         end
     end
 end
-updateModelButtons()
 
 -- Update CanvasSize based on the number of buttons
 uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -191,10 +194,10 @@ end)
 
 -- Search Bar Functionality
 searchBar:GetPropertyChangedSignal("Text"):Connect(function()
-    for _, button in ipairs(scrollingFrame:GetChildren()) do
-        if button:IsA("TextButton") and button.Text ~= "Close" then
-            button.Visible = string.lower(button.Text):find(string.lower(searchBar.Text), 1, true) ~= nil
-        end
+    local searchText = string.lower(searchBar.Text)
+
+    for _, button in ipairs(modelButtons) do
+        button.Visible = string.lower(button.Text):find(searchText, 1, true) ~= nil
     end
 end)
 
