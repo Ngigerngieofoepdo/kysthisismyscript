@@ -1,3 +1,31 @@
+-- Initial Script to Handle Tool Transfer and Remote Hooking
+local yes = Instance.new("BoolValue")
+
+yes:GetPropertyChangedSignal("Value"):Connect(function()
+    if yes.Value == true then
+        for _, tool in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
+            tool.Parent = game.Players.LocalPlayer.Character
+        end
+        wait(0.5)
+        for _, tool in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Players.LocalPlayer.Backpack
+            end
+        end
+    end
+end)
+
+local Hook -- Store the old hook to return vital functions later
+Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self, ...)
+    local args = {...} -- Store argument
+    if getnamecallmethod() == "InvokeServer" and self.Name == "PickupTool" then
+        yes.Value = true
+        yes.Value = false
+    end
+    return Hook(self, ...) -- Return the old hook to prevent breaking your entire game
+end))
+
+-- Main Script to Create GUI and Handle Tool Pickup
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
