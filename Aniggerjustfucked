@@ -44,6 +44,14 @@ openButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
 openButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
 openButton.Text = "Show Models"
 
+-- Create Search Bar
+local searchBar = Instance.new("TextBox", screenGui)
+searchBar.Size = UDim2.new(0.3, 0, 0.05, 0)
+searchBar.Position = UDim2.new(0.35, 0, 0.15, 0)
+searchBar.PlaceholderText = "Search for models..."
+searchBar.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Light grey background
+searchBar.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+
 -- Create Scrolling Frame
 local scrollingFrame = Instance.new("ScrollingFrame", screenGui)
 scrollingFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
@@ -87,11 +95,14 @@ local function createModelButton(model)
 end
 
 -- Populate the scrolling frame with all models containing a #
-for _, model in ipairs(toolsFolder:GetChildren()) do
-    if model:IsA("Model") then
-        createModelButton(model)
+local function updateModelButtons()
+    for _, model in ipairs(toolsFolder:GetChildren()) do
+        if model:IsA("Model") then
+            createModelButton(model)
+        end
     end
 end
+updateModelButtons()
 
 -- Update CanvasSize based on the number of buttons
 uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -151,6 +162,39 @@ tpButton.MouseButton1Click:Connect(function()
         player.Character.HumanoidRootPart.CFrame = originalPosition
     else
         warn("No model selected or model not found.")
+    end
+end)
+
+-- Walk Speed Change Buttons
+local walkSpeed60Button = Instance.new("TextButton", screenGui)
+walkSpeed60Button.Size = UDim2.new(0.1, 0, 0.05, 0)
+walkSpeed60Button.Position = UDim2.new(0.45, 0, 0.8, 0)
+walkSpeed60Button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
+walkSpeed60Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+walkSpeed60Button.Text = "Speed 60"
+
+local walkSpeed16Button = Instance.new("TextButton", screenGui)
+walkSpeed16Button.Size = UDim2.new(0.1, 0, 0.05, 0)
+walkSpeed16Button.Position = UDim2.new(0.55, 0, 0.8, 0)
+walkSpeed16Button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
+walkSpeed16Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+walkSpeed16Button.Text = "Normal Speed"
+
+-- Change Walk Speed functionality
+walkSpeed60Button.MouseButton1Click:Connect(function()
+    player.Character.Humanoid.WalkSpeed = 60
+end)
+
+walkSpeed16Button.MouseButton1Click:Connect(function()
+    player.Character.Humanoid.WalkSpeed = 16
+end)
+
+-- Search Bar Functionality
+searchBar:GetPropertyChangedSignal("Text"):Connect(function()
+    for _, button in ipairs(scrollingFrame:GetChildren()) do
+        if button:IsA("TextButton") and button.Text ~= "Close" then
+            button.Visible = string.lower(button.Text):find(string.lower(searchBar.Text), 1, true) ~= nil
+        end
     end
 end)
 
