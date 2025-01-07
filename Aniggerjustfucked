@@ -102,7 +102,7 @@ tpButton.MouseButton1Click:Connect(function()
         -- Teleport to the model's position
         player.Character.HumanoidRootPart.CFrame = CFrame.new(modelPosition)
 
-        -- Fire the remote two times
+        -- Fire the remote two times with a wait
         for i = 1, 2 do
             local args = {
                 [1] = "#" .. selectedModel.Name, -- Assuming the remote needs the formatted name
@@ -116,11 +116,10 @@ tpButton.MouseButton1Click:Connect(function()
                 warn("Error firing remote: " .. err)
             end
             
-            wait(0.18) -- Wait for 0.18 seconds between calls
+            wait(0.4) -- Wait for 0.4 seconds between calls (total 0.8 seconds for two calls)
         end
 
-        -- Teleport back to the original position after a 2-second delay
-        wait(2) -- Ensure the remote calls have time to process
+        -- Teleport back to the original position
         player.Character.HumanoidRootPart.CFrame = originalPosition
     else
         warn("No model selected or model not found.")
