@@ -211,13 +211,12 @@ end)
 
 -- Toggle Button Functionality
 toggleButton.MouseButton1Click:Connect(function()
-    -- Disable/enable the GUI elements except the toggle button itself
-    local isEnabled = screenGui.Enabled
-    screenGui.Enabled = not isEnabled
+    -- Toggle the visibility of the GUI elements except the toggle button itself
+    local isVisible = screenGui.Enabled
+    screenGui.Enabled = not isVisible -- Toggle the entire GUI
 
-    -- Keep the toggle button visible
-    toggleButton.Visible = true
-    toggleButton.Text = isEnabled and "Show" or "Hide" -- Update toggle button text
+    -- Update toggle button text based on the GUI's visibility
+    toggleButton.Text = isVisible and "Show" or "Hide"
 end)
 
 print("Model Picker GUI created successfully!")
