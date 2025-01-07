@@ -1,0 +1,132 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local toolsFolder = workspace:WaitForChild("Map"):WaitForChild("Ignore"):WaitForChild("Tools") -- Folder containing models
+local remote = workspace.Services:WaitForChild("PickupTool")
+
+-- Create Screen GUI
+local screenGui = Instance.new("ScreenGui", playerGui)
+screenGui.Name = "ModelPickerGui"
+
+-- Create Main Button to Open Scroll Frame
+local openButton = Instance.new("TextButton", screenGui)
+openButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+openButton.Position = UDim2.new(0.4, 0, 0.1, 0)
+openButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+openButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+openButton.Text = "Show Models"
+
+-- Create Scrolling Frame
+local scrollingFrame = Instance.new("ScrollingFrame", screenGui)
+scrollingFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
+scrollingFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+scrollingFrame.Visible = false
+scrollingFrame.ScrollBarThickness = 10
+scrollingFrame.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
+scrollingFrame.ScrollBarImageTransparency = 0.5
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Initialize with zero size
+
+-- Create UI List Layout for Scrolling Frame
+local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
+uiListLayout.FillDirection = Enum.FillDirection.Vertical
+uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+uiListLayout.Padding = UDim.new(0, 5)
+
+-- Create Close Button
+local closeButton = Instance.new("TextButton", scrollingFrame)
+closeButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+closeButton.Position = UDim2.new(0.4, 0, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+closeButton.Text = "Close"
+
+-- Function to create buttons for each model with a #
+local function createModelButton(model)
+    if string.find(model.Name, "#") then -- Check if the model name contains a #
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 50) -- Full width, fixed height
+        button.Text = model.Name
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark grey
+        button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+        button.Parent = scrollingFrame
+
+        button.MouseButton1Click:Connect(function()
+            -- Store the selected model name for activation
+            screenGui:SetAttribute("SelectedModel", model.Name)
+        end)
+    end
+end
+
+-- Populate the scrolling frame with all models containing a #
+for _, model in ipairs(toolsFolder:GetChildren()) do
+    if model:IsA("Model") then
+        createModelButton(model)
+    end
+end
+
+-- Update CanvasSize based on the number of buttons
+uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiListLayout.AbsoluteContentSize.Y) -- Adjust canvas size to fit content
+end)
+
+-- Button to open the scrolling frame
+openButton.MouseButton1Click:Connect(function()
+    scrollingFrame.Visible = true
+end)
+
+-- Close button functionality
+closeButton.MouseButton1Click:Connect(function()
+    scrollingFrame.Visible = false
+end)
+
+-- Create TP and Get Button
+local tpButton = Instance.new("TextButton", screenGui)
+tpButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+tpButton.Position = UDim2.new(0.4, 0, 0.7, 0)
+tpButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue background
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+tpButton.Text = "TP and Get"
+
+-- TP and Get functionality
+tpButton.MouseButton1Click:Connect(function()
+    local selectedModelName = screenGui:GetAttribute("SelectedModel")
+    local selectedModel = toolsFolder:FindFirstChild(selectedModelName)
+
+    if selectedModel then
+        local originalPosition = player.Character:WaitForChild("HumanoidRootPart").CFrame -- Store original position
+
+        -- Teleport to the model's position using its PrimaryPart
+        if selectedModel.PrimaryPart then
+            player.Character.HumanoidRootPart.CFrame = selectedModel.PrimaryPart.CFrame
+        else
+            warn("Selected model does not have a PrimaryPart.")
+            return
+        end
+
+        -- Fire the remote multiple times
+        for i = 1, 5 do
+            local args = {
+                [1] = "#" .. selectedModel.Name, -- Assuming the remote needs the formatted name
+                [2] = selectedModel.Name -- The full model name
+            }
+            local success, err = pcall(function()
+                remote:InvokeServer(unpack(args))
+            end)
+
+            if not success then
+                warn("Error firing remote: " .. err)
+            end
+            
+            wait(0.18) -- Wait for 0.18 seconds between calls
+        end
+
+        -- Teleport back to the original position after a 2-second delay
+        wait(2) -- Ensure the remote calls have time to process
+        player.Character.HumanoidRootPart.CFrame = originalPosition
+    else
+        warn("No model selected or model not found.")
+    end
+end)
+
+print("Model Picker GUI created successfully!")
