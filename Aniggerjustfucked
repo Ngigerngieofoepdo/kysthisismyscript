@@ -36,6 +36,14 @@ local remote = workspace.Services:WaitForChild("PickupTool")
 local screenGui = Instance.new("ScreenGui", playerGui)
 screenGui.Name = "ModelPickerGui"
 
+-- Create Toggle Button to Show/Hide GUI
+local toggleButton = Instance.new("TextButton", screenGui)
+toggleButton.Size = UDim2.new(0.05, 0, 0.05, 0) -- Small size
+toggleButton.Position = UDim2.new(0, 0, 0.1, 0) -- Left side of the screen
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
+toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+toggleButton.Text = "Toggle"
+
 -- Create Main Button to Open Scroll Frame
 local openButton = Instance.new("TextButton", screenGui)
 openButton.Size = UDim2.new(0.2, 0, 0.1, 0)
@@ -199,6 +207,11 @@ searchBar:GetPropertyChangedSignal("Text"):Connect(function()
     for _, button in ipairs(modelButtons) do
         button.Visible = string.lower(button.Text):find(searchText, 1, true) ~= nil
     end
+end)
+
+-- Toggle Button Functionality
+toggleButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = not screenGui.Enabled -- Toggle visibility
 end)
 
 print("Model Picker GUI created successfully!")
