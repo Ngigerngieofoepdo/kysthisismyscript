@@ -96,13 +96,11 @@ tpButton.MouseButton1Click:Connect(function()
     if selectedModel then
         local originalPosition = player.Character:WaitForChild("HumanoidRootPart").CFrame -- Store original position
 
-        -- Teleport to the model's position using its PrimaryPart
-        if selectedModel.PrimaryPart then
-            player.Character.HumanoidRootPart.CFrame = selectedModel.PrimaryPart.CFrame
-        else
-            warn("Selected model does not have a PrimaryPart.")
-            return
-        end
+        -- Get the position of the selected model
+        local modelPosition = selectedModel:GetModelCFrame().Position
+
+        -- Teleport to the model's position
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(modelPosition)
 
         -- Fire the remote multiple times
         for i = 1, 5 do
@@ -128,5 +126,10 @@ tpButton.MouseButton1Click:Connect(function()
         warn("No model selected or model not found.")
     end
 end)
+
+-- Helper function to get the model's CFrame
+function Model:GetModelCFrame()
+    return self:GetPrimaryPartCFrame() or CFrame.new(self:GetModelCFrame().Position)
+end
 
 print("Model Picker GUI created successfully!")
