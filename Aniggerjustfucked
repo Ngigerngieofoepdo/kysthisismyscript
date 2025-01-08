@@ -23,6 +23,39 @@ local playerGui = player:WaitForChild("PlayerGui")
 local toolsFolder = workspace:WaitForChild("Map"):WaitForChild("Ignore"):WaitForChild("Tools") -- Folder containing models
 local remote = workspace.Services:WaitForChild("PickupTool")
 
+-- Chams Script
+local function createChamEffect(part)
+    local cham = Instance.new("BoxHandleAdornment")
+    cham.Size = part.Size
+    cham.Adornee = part
+    cham.AlwaysOnTop = true
+    cham.ZIndex = 5
+    cham.Transparency = 0.5
+    cham.Color3 = Color3.new(0, 1, 0) -- Green color for the cham effect
+    cham.Parent = part
+end
+
+local function handlePlayerCharacter(player)
+    local character = player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                createChamEffect(part)
+            end
+        end
+    end
+end
+
+for _, player in ipairs(game.Players:GetPlayers()) do
+    handlePlayerCharacter(player)
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        handlePlayerCharacter(player)
+    end)
+end
+
 -- Create Screen GUI
 local screenGui = Instance.new("ScreenGui", playerGui)
 screenGui.Name = "ModelPickerGui"
