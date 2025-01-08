@@ -260,8 +260,6 @@ end)
 
 print("Model Picker GUI created successfully!")
 
-
-can u make this auto execute along with the inf storage? local theId
 local ThePart
 local Hook; -- Store the old hook to return vital functions later
 Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self, ...) -- Hook Namecall
