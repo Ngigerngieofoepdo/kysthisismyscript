@@ -1,6 +1,4 @@
 -- Initial Script to Handle Tool Transfer and Remote Hooking
-local yes = Instance.new("BoolValue"-- Initial Script to Handle Tool Transfer and Remote Hooking
-local yes = Instance.new("BoolValue"-- Initial Script to Handle Tool Transfer and Remote Hooking
 local yes = Instance.new("BoolValue")
 
 yes:GetPropertyChangedSignal("Value"):Connect(function()
