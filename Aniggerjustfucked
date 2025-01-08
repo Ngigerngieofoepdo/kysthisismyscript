@@ -208,7 +208,7 @@ yes:GetPropertyChangedSignal("Value"):Connect(function()
     end
 end)
 
-local Hook;
+local Hook; -- Store the old hook to return vital functions later
 Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self, ...)
     local args = {...}
     if getnamecallmethod() == "InvokeServer" and self.Name == "PickupTool" then
@@ -218,4 +218,4 @@ Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self,
     return Hook(self, ...)
 end))
 
-print("loaded") 
+print("All functionalities merged successfully!") this is my roblox studio script, can u add esp/chams to it with a display of name and chams (red transparent chams)
