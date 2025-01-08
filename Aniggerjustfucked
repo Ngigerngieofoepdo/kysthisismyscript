@@ -1,23 +1,223 @@
--- Initial Script to Handle Tool Transfer and Remote Hooking
-local yes = Instance.new("BoolValue")
+-- Load and execute the Dalgona script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Ngigerngieofoepdo/VersionTwo/refs/heads/main/Dalgona"))()
 
+-- Load and execute the Bypass Request script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Ngigerngieofoepdo/BetterFindAMopImGettingStickyInHisBitch/refs/heads/main/Idkdkdkyes"))()
+
+-- Function to create the Model Picker GUI
+local function createModelPickerGui()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+    local toolsFolder = workspace:WaitForChild("Map"):WaitForChild("Ignore"):WaitForChild("Tools") -- Folder containing models
+    local remote = workspace.Services:WaitForChild("PickupTool")
+
+    -- Create Screen GUI
+    local screenGui = Instance.new("ScreenGui", playerGui)
+    screenGui.Name = "ModelPickerGui"
+
+    -- Create Main Button to Open Scroll Frame
+    local openButton = Instance.new("TextButton", screenGui)
+    openButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+    openButton.Position = UDim2.new(0.4, 0, 0.1, 0)
+    openButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+    openButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+    openButton.Text = "Show Models"
+
+    -- Create Search Bar
+    local searchBar = Instance.new("TextBox", screenGui)
+    searchBar.Size = UDim2.new(0.3, 0, 0.05, 0)
+    searchBar.Position = UDim2.new(0.35, 0, 0.15, 0)
+    searchBar.PlaceholderText = "Search for models..."
+    searchBar.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Light grey background
+    searchBar.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+
+    -- Create Scrolling Frame
+    local scrollingFrame = Instance.new("ScrollingFrame", screenGui)
+    scrollingFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
+    scrollingFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+    scrollingFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+    scrollingFrame.Visible = false
+    scrollingFrame.ScrollBarThickness = 10
+    scrollingFrame.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
+    scrollingFrame.ScrollBarImageTransparency = 0.5
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Initialize with zero size
+
+    -- Create UI List Layout for Scrolling Frame
+    local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
+    uiListLayout.FillDirection = Enum.FillDirection.Vertical
+    uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    uiListLayout.Padding = UDim.new(0, 5)
+
+    -- Create Close Button
+    local closeButton = Instance.new("TextButton", scrollingFrame)
+    closeButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+    closeButton.Position = UDim2.new(0.4, 0, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+    closeButton.Text = "Close"
+
+    -- Function to create buttons for each model with a #
+    local function createModelButton(model)
+        if string.find(model.Name, "#") then -- Check if the model name contains a #
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(1, 0, 0, 50) -- Full width, fixed height
+            button.Text = model.Name
+            button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark grey
+            button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+            button.Parent = scrollingFrame
+
+            button.MouseButton1Click:Connect(function()
+                -- Store the selected model name for activation
+                screenGui:SetAttribute("SelectedModel", model.Name)
+            end)
+
+            return button -- Return the button for further reference
+        end
+    end
+
+    -- Populate the scrolling frame with all models containing a #
+    local modelButtons = {} -- Store model buttons for filtering
+    for _, model in ipairs(toolsFolder:GetChildren()) do
+        if model:IsA("Model") then
+            local button = createModelButton(model)
+            if button then
+                table.insert(modelButtons, button)
+            end
+        end
+    end
+
+    -- Update CanvasSize based on the number of buttons
+    uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiListLayout.AbsoluteContentSize.Y) -- Adjust canvas size to fit content
+    end)
+
+    -- Button to open the scrolling frame
+    openButton.MouseButton1Click:Connect(function()
+        scrollingFrame.Visible = true
+    end)
+
+    -- Close button functionality
+    closeButton.MouseButton1Click:Connect(function()
+        scrollingFrame.Visible = false
+    end)
+
+    -- Create TP and Get Button
+    local tpButton = Instance.new("TextButton", screenGui)
+    tpButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+    tpButton.Position = UDim2.new(0.4, 0, 0.7, 0)
+    tpButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue background
+    tpButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+    tpButton.Text = "TP and Get"
+
+    -- TP and Get functionality
+    tpButton.MouseButton1Click:Connect(function()
+        local selectedModelName = screenGui:GetAttribute("SelectedModel")
+        local selectedModel = toolsFolder:FindFirstChild(selectedModelName)
+
+        if selectedModel then
+            local originalPosition = player.Character:WaitForChild("HumanoidRootPart").CFrame -- Store original position
+
+            -- Get the position of the selected model
+            local modelPosition = selectedModel:GetModelCFrame().Position
+
+            -- Teleport to the model's position
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(modelPosition)
+
+            -- Fire the remote two times with a wait
+            for i = 1, 2 do
+                local args = {
+                    [1] = "#" .. selectedModel.Name, -- Assuming the remote needs the formatted name
+                    [2] = selectedModel.Name -- The full model name
+                }
+                local success, err = pcall(function()
+                    remote:InvokeServer(unpack(args))
+                end)
+
+                if not success then
+                    warn("Error firing remote: " .. err)
+                end
+                
+                wait(0.4) -- Wait for 0.4 seconds between calls (total 0.8 seconds for two calls)
+            end
+
+            -- Teleport back to the original position
+            player.Character.HumanoidRootPart.CFrame = originalPosition
+        else
+            warn("No model selected or model not found.")
+        end
+    end)
+
+    -- Walk Speed Change Buttons
+    local walkSpeed60Button = Instance.new("TextButton", screenGui)
+    walkSpeed60Button.Size = UDim2.new(0.1, 0, 0.05, 0)
+    walkSpeed60Button.Position = UDim2.new(0.45, 0, 0.8, 0)
+    walkSpeed60Button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
+    walkSpeed60Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+    walkSpeed60Button.Text = "Speed 60"
+
+    local walkSpeed16Button = Instance.new("TextButton", screenGui)
+    walkSpeed16Button.Size = UDim2.new(0.1, 0, 0.05, 0)
+    walkSpeed16Button.Position = UDim2.new(0.55, 0, 0.8, 0)
+    walkSpeed16Button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
+    walkSpeed16Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+    walkSpeed16Button.Text = "Normal Speed"
+
+    -- Change Walk Speed functionality
+    walkSpeed60Button.MouseButton1Click:Connect(function()
+        player.Character.Humanoid.WalkSpeed = 60
+    end)
+
+    walkSpeed16Button.MouseButton1Click:Connect(function()
+        player.Character.Humanoid.WalkSpeed = 16
+    end)
+
+    -- Search Bar Functionality
+    searchBar:GetPropertyChangedSignal("Text"):Connect(function()
+        local searchText = string.lower(searchBar.Text)
+
+        for _, button in ipairs(modelButtons) do
+            button.Visible = string.lower(button.Text):find(searchText, 1, true) ~= nil
+        end
+    end)
+
+    -- ESP/Chams Button
+    local espButton = Instance.new("TextButton", screenGui)
+    espButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+    espButton.Position = UDim2.new(0.4, 0, 0.85, 0)
+    espButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0) -- Yellow background
+    espButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+    espButton.Text = "Toggle ESP/Chams"
+
+    -- ESP/Chams functionality placeholder
+    espButton.MouseButton1Click:Connect(function()
+        -- Implement your ESP/Chams logic here
+        print("ESP/Chams toggled!") -- Placeholder action
+    end)
+end
+
+-- Create the initial GUI
+createModelPickerGui()
+
+-- Dalgona functionality
+local yes = Instance.new("BoolValue")
 yes:GetPropertyChangedSignal("Value"):Connect(function()
     if yes.Value == true then
-        for _, tool in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
-            tool.Parent = game.Players.LocalPlayer.Character
+        for _, v in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
+            v.Parent = game.Players.LocalPlayer.Character
         end
         wait(0.5)
-        for _, tool in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-                tool.Parent = game.Players.LocalPlayer.Backpack
+        for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if v:IsA("Tool") then
+                v.Parent = game.Players.LocalPlayer.Backpack
             end
         end
     end
 end)
 
-local Hook -- Store the old hook to return vital functions later
-Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self, ...)
-    local args = {...} -- Store argument
+local Hook; -- Store the old hook to return vital functions later
+Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self, ...) -- Hook Namecall
+    local args = {...} -- store argument
     if getnamecallmethod() == "InvokeServer" and self.Name == "PickupTool" then
         yes.Value = true
         yes.Value = false
@@ -25,237 +225,4 @@ Hook = hookfunction(getrawmetatable(game).__namecall, newcclosure(function(self,
     return Hook(self, ...) -- Return the old hook to prevent breaking your entire game
 end))
 
--- Main Script to Create GUI and Handle Tool Pickup
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local toolsFolder = workspace:WaitForChild("Map"):WaitForChild("Ignore"):WaitForChild("Tools") -- Folder containing models
-local remote = workspace.Services:WaitForChild("PickupTool")
-
--- Create Screen GUI
-local screenGui = Instance.new("ScreenGui", playerGui)
-screenGui.Name = "ModelPickerGui"
-
--- Create Toggle Button to Show/Hide GUI
-local function createToggleButton()
-    local toggleButton = Instance.new("TextButton", screenGui)
-    toggleButton.Size = UDim2.new(0.05, 0, 0.05, 0) -- Small size
-    toggleButton.Position = UDim2.new(0, 0, 0.1, 0) -- Left side of the screen
-    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
-    toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-    toggleButton.Text = "Toggle"
-
-    return toggleButton
-end
-
-local toggleButton = createToggleButton()
-
--- Create Main Button to Open Scroll Frame
-local openButton = Instance.new("TextButton", screenGui)
-openButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-openButton.Position = UDim2.new(0.4, 0, 0.1, 0)
-openButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
-openButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-openButton.Text = "Show Models"
-
--- Create Search Bar
-local searchBar = Instance.new("TextBox", screenGui)
-searchBar.Size = UDim2.new(0.3, 0, 0.05, 0)
-searchBar.Position = UDim2.new(0.35, 0, 0.15, 0)
-searchBar.PlaceholderText = "Search for models..."
-searchBar.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Light grey background
-searchBar.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-
--- Create Scrolling Frame
-local scrollingFrame = Instance.new("ScrollingFrame", screenGui)
-scrollingFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
-scrollingFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
-scrollingFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
-scrollingFrame.Visible = true
-scrollingFrame.ScrollBarThickness = 10
-scrollingFrame.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
-scrollingFrame.ScrollBarImageTransparency = 0.5
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Initialize with zero size
-
--- Create UI List Layout for Scrolling Frame
-local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
-uiListLayout.FillDirection = Enum.FillDirection.Vertical
-uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-uiListLayout.Padding = UDim.new(0, 5)
-
--- Create Close Button
-local closeButton = Instance.new("TextButton", scrollingFrame)
-closeButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-closeButton.Position = UDim2.new(0.4, 0, 0, 0)
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-closeButton.Text = "Close"
-
--- Function to create buttons for each model with a #
-local function createModelButton(model)
-    if string.find(model.Name, "#") then -- Check if the model name contains a #
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, 0, 0, 50) -- Full width, fixed height
-        button.Text = model.Name
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark grey
-        button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-        button.Parent = scrollingFrame
-
-        button.MouseButton1Click:Connect(function()
-            -- Store the selected model name for activation
-            screenGui:SetAttribute("SelectedModel", model.Name)
-        end)
-
-        return button -- Return the button for further reference
-    end
-end
-
--- Populate the scrolling frame with all models containing a #
-local modelButtons = {} -- Store model buttons for filtering
-for _, model in ipairs(toolsFolder:GetChildren()) do
-    if model:IsA("Model") then
-        local button = createModelButton(model)
-        if button then
-            table.insert(modelButtons, button)
-        end
-    end
-end
-
--- Update CanvasSize based on the number of buttons
-uiListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, uiListLayout.AbsoluteContentSize.Y) -- Adjust canvas size to fit content
-end)
-
--- Button to open the scrolling frame
-openButton.MouseButton1Click:Connect(function()
-    scrollingFrame.Visible = true
-end)
-
--- Close button functionality
-closeButton.MouseButton1Click:Connect(function()
-    scrollingFrame.Visible = false
-    -- Create a new toggle button to allow toggling back on
-    local newToggleButton = createToggleButton()
-    newToggleButton.Text = "Show"
-    
-    newToggleButton.MouseButton1Click:Connect(function()
-        screenGui.Enabled = true
-        newToggleButton:Destroy() -- Remove the new toggle button
-    end)
-end)
-
--- Create TP and Get Button
-local tpButton = Instance.new("TextButton", screenGui)
-tpButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-tpButton.Position = UDim2.new(0.4, 0, 0.7, 0)
-tpButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue background
-tpButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-tpButton.Text = "TP and Get"
-
--- TP and Get functionality
-tpButton.MouseButton1Click:Connect(function()
-    local selectedModelName = screenGui:GetAttribute("SelectedModel")
-    local selectedModel = toolsFolder:FindFirstChild(selectedModelName)
-
-    if selectedModel then
-        local originalPosition = player.Character:WaitForChild("HumanoidRootPart").CFrame -- Store original position
-
-        -- Get the position of the selected model
-        local modelPosition = selectedModel:GetModelCFrame().Position
-
-        -- Teleport to the model's position
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(modelPosition)
-
-        -- Fire the remote two times with a wait
-        for i = 1, 2 do
-            local args = {
-                [1] = "#" .. selectedModel.Name, -- Assuming the remote needs the formatted name
-                [2] = selectedModel.Name -- The full model name
-            }
-            local success, err = pcall(function()
-                remote:InvokeServer(unpack(args))
-            end)
-
-            if not success then
-                warn("Error firing remote: " .. err)
-            end
-            
-            wait(0.4) -- Wait for 0.4 seconds between calls (total 0.8 seconds for two calls)
-        end
-
-        -- Teleport back to the original position
-        player.Character.HumanoidRootPart.CFrame = originalPosition
-    else
-        warn("No model selected or model not found.")
-    end
-end)
-
--- Walk Speed Change Buttons
-local walkSpeed60Button = Instance.new("TextButton", screenGui)
-walkSpeed60Button.Size = UDim2.new(0.1, 0, 0.05, 0)
-walkSpeed60Button.Position = UDim2.new(0.45, 0, 0.8, 0)
-walkSpeed60Button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
-walkSpeed60Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-walkSpeed60Button.Text = "Speed 60"
-
-local walkSpeed16Button = Instance.new("TextButton", screenGui)
-walkSpeed16Button.Size = UDim2.new(0.1, 0, 0.05, 0)
-walkSpeed16Button.Position = UDim2.new(0.55, 0, 0.8, 0)
-walkSpeed16Button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
-walkSpeed16Button.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-walkSpeed16Button.Text = "Normal Speed"
-
--- Change Walk Speed functionality
-walkSpeed60Button.MouseButton1Click:Connect(function()
-    player.Character.Humanoid.WalkSpeed = 60
-end)
-
-walkSpeed16Button.MouseButton1Click:Connect(function()
-    player.Character.Humanoid.WalkSpeed = 16
-end)
-
--- Search Bar Functionality
-searchBar:GetPropertyChangedSignal("Text"):Connect(function()
-    local searchText = string.lower(searchBar.Text)
-
-    for _, button in ipairs(modelButtons) do
-        button.Visible = string.lower(button.Text):find(searchText, 1, true) ~= nil
-    end
-end)
-
--- ESP/Chams Button
-local espButton = Instance.new("TextButton", screenGui)
-espButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-espButton.Position = UDim2.new(0.4, 0, 0.85, 0)
-espButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0) -- Yellow background
-espButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-espButton.Text = "Toggle ESP/Chams"
-
--- ESP/Chams functionality placeholder
-espButton.MouseButton1Click:Connect(function()
-    -- Implement your ESP/Chams logic here
-    print("ESP/Chams toggled!") -- Placeholder action
-end)
-
--- Toggle Button Functionality
-toggleButton.MouseButton1Click:Connect(function()
-    -- Toggle the visibility of the GUI elements except the toggle button itself
-    local isVisible = screenGui.Enabled
-    screenGui.Enabled = not isVisible -- Toggle the entire GUI
-    
-    -- If hiding, create a new toggle button
-    if not isVisible then
-        local newToggleButton = createToggleButton()
-        newToggleButton.Text = "Show"
-        
-        newToggleButton.MouseButton1Click:Connect(function()
-            screenGui.Enabled = true
-            newToggleButton:Destroy() -- Remove the new toggle button
-        end)
-    end
-
-    -- Update toggle button text based on the GUI's visibility
-    toggleButton.Text = isVisible and "Show" or "Hide"
-end)
-
-print("Model Picker GUI created successfully!")
+print("All functionalities merged successfully!")
