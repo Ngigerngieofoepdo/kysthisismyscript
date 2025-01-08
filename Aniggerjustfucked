@@ -1,4 +1,6 @@
 -- Initial Script to Handle Tool Transfer and Remote Hooking
+local yes = Instance.new("BoolValue"-- Initial Script to Handle Tool Transfer and Remote Hooking
+local yes = Instance.new("BoolValue"-- Initial Script to Handle Tool Transfer and Remote Hooking
 local yes = Instance.new("BoolValue")
 
 yes:GetPropertyChangedSignal("Value"):Connect(function()
@@ -37,12 +39,18 @@ local screenGui = Instance.new("ScreenGui", playerGui)
 screenGui.Name = "ModelPickerGui"
 
 -- Create Toggle Button to Show/Hide GUI
-local toggleButton = Instance.new("TextButton", screenGui)
-toggleButton.Size = UDim2.new(0.05, 0, 0.05, 0) -- Small size
-toggleButton.Position = UDim2.new(0, 0, 0.1, 0) -- Left side of the screen
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
-toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
-toggleButton.Text = "Toggle"
+local function createToggleButton()
+    local toggleButton = Instance.new("TextButton", screenGui)
+    toggleButton.Size = UDim2.new(0.05, 0, 0.05, 0) -- Small size
+    toggleButton.Position = UDim2.new(0, 0, 0.1, 0) -- Left side of the screen
+    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green background
+    toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+    toggleButton.Text = "Toggle"
+
+    return toggleButton
+end
+
+local toggleButton = createToggleButton()
 
 -- Create Main Button to Open Scroll Frame
 local openButton = Instance.new("TextButton", screenGui)
@@ -65,7 +73,7 @@ local scrollingFrame = Instance.new("ScrollingFrame", screenGui)
 scrollingFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
 scrollingFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
 scrollingFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
-scrollingFrame.Visible = false
+scrollingFrame.Visible = true
 scrollingFrame.ScrollBarThickness = 10
 scrollingFrame.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
 scrollingFrame.ScrollBarImageTransparency = 0.5
@@ -128,6 +136,14 @@ end)
 -- Close button functionality
 closeButton.MouseButton1Click:Connect(function()
     scrollingFrame.Visible = false
+    -- Create a new toggle button to allow toggling back on
+    local newToggleButton = createToggleButton()
+    newToggleButton.Text = "Show"
+    
+    newToggleButton.MouseButton1Click:Connect(function()
+        screenGui.Enabled = true
+        newToggleButton:Destroy() -- Remove the new toggle button
+    end)
 end)
 
 -- Create TP and Get Button
@@ -209,11 +225,36 @@ searchBar:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
+-- ESP/Chams Button
+local espButton = Instance.new("TextButton", screenGui)
+espButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+espButton.Position = UDim2.new(0.4, 0, 0.85, 0)
+espButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0) -- Yellow background
+espButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Black text
+espButton.Text = "Toggle ESP/Chams"
+
+-- ESP/Chams functionality placeholder
+espButton.MouseButton1Click:Connect(function()
+    -- Implement your ESP/Chams logic here
+    print("ESP/Chams toggled!") -- Placeholder action
+end)
+
 -- Toggle Button Functionality
 toggleButton.MouseButton1Click:Connect(function()
     -- Toggle the visibility of the GUI elements except the toggle button itself
     local isVisible = screenGui.Enabled
     screenGui.Enabled = not isVisible -- Toggle the entire GUI
+    
+    -- If hiding, create a new toggle button
+    if not isVisible then
+        local newToggleButton = createToggleButton()
+        newToggleButton.Text = "Show"
+        
+        newToggleButton.MouseButton1Click:Connect(function()
+            screenGui.Enabled = true
+            newToggleButton:Destroy() -- Remove the new toggle button
+        end)
+    end
 
     -- Update toggle button text based on the GUI's visibility
     toggleButton.Text = isVisible and "Show" or "Hide"
